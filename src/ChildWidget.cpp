@@ -350,6 +350,11 @@ ChildWidget::ChildWidget(QWidget* parent)
   currPage = 0;
   npages = 0;
 
+  QString newStr = QString("%1").arg(currPage);
+  proxyModel->setFilterRegExp(QRegExp(newStr, Qt::CaseInsensitive,
+                                      QRegExp::FixedString));
+  proxyModel->setFilterKeyColumn(5);
+
   rubberBand = new QRubberBand(QRubberBand::Rectangle, imageView);
 
   m_undostack.SetRedoStack(&m_redostack);
@@ -371,8 +376,13 @@ void ChildWidget::initTable() {
   model->setHeaderData(7, Qt::Horizontal, tr("Bold"));
   model->setHeaderData(8, Qt::Horizontal, tr("Underline"));
   model->setHeaderData(9, Qt::Horizontal, tr("<Hidden> BB"));
-  table->setModel(model);
-  selectionModel = new QItemSelectionModel(model);
+
+  proxyModel = new QSortFilterProxyModel(this);
+  proxyModel->setSourceModel(model);
+  proxyModel->setDynamicSortFilter(true);
+  table->setModel(proxyModel);
+
+  selectionModel = new QItemSelectionModel(proxyModel);
   connect(
     selectionModel,
     SIGNAL(selectionChanged(const QItemSelection&, const QItemSelection&)),
@@ -381,7 +391,7 @@ void ChildWidget::initTable() {
   table->setSelectionBehavior(QAbstractItemView::SelectRows);
   table->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-  table->hideColumn(5);
+  //table->hideColumn(5);
   table->hideColumn(6);
   table->hideColumn(7);
   table->hideColumn(8);
@@ -683,7 +693,6 @@ bool ChildWidget::fillTableData(QTextStream &boxdata) {
       // TODO(zdenop): implement support for multipage tif
       if (firstPage < 0)
         firstPage = page;  // first page can have number 5 ;-)
-      if (firstPage == page) {  // ignore other pages than first page
         model->insertRow(row);
         model->setData(model->index(row, 0, QModelIndex()), letterFont,
                        Qt::FontRole);
@@ -696,11 +705,8 @@ bool ChildWidget::fillTableData(QTextStream &boxdata) {
         model->setData(model->index(row, 6, QModelIndex()), italic);
         model->setData(model->index(row, 7, QModelIndex()), bold);
         model->setData(model->index(row, 8, QModelIndex()), underline);
-
         createModelItemBox(row);
-
         row++;
-      }
     }
   } while (!line.isEmpty());
 
@@ -2904,6 +2910,9 @@ bool ChildWidget::slotChangePage(int sbdPage) {
   imageHeight = image.height();
   imageWidth = image.width();
   imageItem = imageScene->addPixmap(QPixmap::fromImage(image));
+  QString newStr = QString("%1").arg(currPage);
+  proxyModel->setFilterRegExp(QRegExp(newStr, Qt::CaseInsensitive,
+                                      QRegExp::FixedString));
 
   return true;
 }

@@ -49,6 +49,7 @@
 #include <QMouseEvent>
 #include <QPixmap>
 #include <QRubberBand>
+#include <QSortFilterProxyModel>
 #include <QSpinBox>
 #include <QSplitter>
 #include <QStandardItemModel>
@@ -263,6 +264,8 @@ class ChildWidget : public QSplitter {
     void moveSymbolRow(int direction);
     QList<QTableWidgetItem*> takeRow(int row);
     void calculateTableWidth();
+
+    QSortFilterProxyModel *proxyModel;
 
   private slots:
     void documentWasModified();
